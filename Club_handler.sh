@@ -64,7 +64,7 @@ SUB_TASK="submitted_tasks"
 		mkdir -p "$DIR_MENTOR/APPDEV"
 		mkdir -p "$DIR_MENTOR/SYSAD"
 
-	cat <<EOF > "$DIR_CONF/$MENTEE"
+cat <<EOF > "$DIR_CONF/$MENTEE"
     	# THIS IS MENTEE DETAILS FILE
     	# FILL IN THE DETAILS IN THE FOLLOWING FORMAT:
     	
@@ -73,7 +73,7 @@ SUB_TASK="submitted_tasks"
     	#EDIT THE ABOVE LINE AND ADD SIMILAR LINES BELOW BASED ON NUMBER OF USERS TO BE CREATED
 EOF
 
-    cat <<EOF > "$DIR_CONF/$MENTOR"
+cat <<EOF > "$DIR_CONF/$MENTOR"
     	# THIS IS MENTOR DETAILS FILE
     	# FILL IN THE DETAILS IN THE FOLLOWING FORMAT:
     	
@@ -85,8 +85,7 @@ EOF
 		# APPDEV
 		# SYSAD 
 EOF
-
-	cat <<EOF > "$DIR_CONF/$DOM"
+cat <<EOF > "$DIR_CONF/$DOM"
     	# THIS IS MENTEE DOMAIN FILE
 EOF
 
@@ -116,7 +115,7 @@ chmod 020 $DIR_CONF/$DOM
 			echo "$user:$pass" | chpasswd
 
 
-			cat <<EOF > "$H_MENT/$DOM_PREF"
+cat <<EOF > "$H_MENT/$DOM_PREF"
     		# THIS IS DOMAIN PREFERENCE FILE
 
 			# UNCOMMENT ONE OF THE FOLLOWING DOMAIN CHOICES TO SELECT THE DOMAIN PREFERENCE:
@@ -128,13 +127,13 @@ chmod 020 $DIR_CONF/$DOM
 EOF
 
 
-			cat <<EOF > "$H_MENT/$TASK_D"
+cat <<EOF > "$H_MENT/$TASK_D"
     		# THIS IS TASKS DONE FILE
 			
 EOF
 
 
-			cat <<EOF > "$H_MENT/$TASK_S"
+cat <<EOF > "$H_MENT/$TASK_S"
     		# THIS IS TASKS SUBMITTED FILE
 EOF
 
@@ -149,7 +148,7 @@ EOF
 			continue
 		fi
 
-		local GROUP
+		GROUP=""
 
 		case "$dom" in 
 			WEBDEV)
@@ -186,7 +185,7 @@ EOF
 			
 			mkdir -p "$H_MENT/$SUB_TASK"
 
-			cat <<EOF > "$H_MENT/$ALLOC"
+cat <<EOF > "$H_MENT/$ALLOC"
     		# THIS IS ALLOCATED MENTEES FILE
 EOF
 
