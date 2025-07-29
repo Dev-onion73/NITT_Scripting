@@ -1,5 +1,4 @@
-#Club_Handler.sh
-
+#!/bin/bash
 
 shell="/bin/bash"
 
@@ -46,7 +45,7 @@ TASK_S="task_sub.txt"
 ALLOC="allocated_mentees.txt"
 SUB_TASK="submitted_tasks"
     
-    read -p "Do you want to create Mentor's and Mentee's directories(y/n) ?" choice
+    read -p -r "Do you want to create Mentor's and Mentee's directories(y|n) ?" choice
     if [[ "$choice" == [yY] ]] ; then
     
     	
@@ -63,6 +62,11 @@ SUB_TASK="submitted_tasks"
 		mkdir -p "$DIR_MENTOR/WEBDEV"
 		mkdir -p "$DIR_MENTOR/APPDEV"
 		mkdir -p "$DIR_MENTOR/SYSAD"
+	elif [[ "$choice" == [nN] ]] ; then
+
+	return 1
+
+	fi 
 
 cat <<EOF > "$DIR_CONF/$MENTEE"
     	# THIS IS MENTEE DETAILS FILE
@@ -92,8 +96,8 @@ EOF
 chown -R :Core "$HOME_C"
 chmod -R 770 "$HOME_C"
 
-chown $Club_Admin:Mentee $DIR_CONF/$DOM
-chmod 020 $DIR_CONF/$DOM
+chown "$Club_Admin":Mentee "$DIR_CONF/$DOM"
+chmod 020 "$DIR_CONF/$DOM"
 
 
 	while IFS=" " read -r user pass; do
@@ -111,7 +115,7 @@ chmod 020 $DIR_CONF/$DOM
 		else
 
 			H_MENT="$DIR_MENTEE/$user"
-			useradd -m -d "$DIR_MENTEE/$user" -G Mentee -s "$shell" $user
+			useradd -m -d "$DIR_MENTEE/$user" -G Mentee -s "$shell" "$user"
 			echo "$user:$pass" | chpasswd
 
 
@@ -180,7 +184,7 @@ EOF
 		else
 
 			H_MENT="$DIR_MENTOR/$user"
-			useradd -m -d "$DIR_MENTOR/$dom/$user" -G $GROUP,Mentor -s "$shell" $user
+			useradd -m -d "$DIR_MENTOR/$dom/$user" -G $GROUP,Mentor -s "$shell" "$user"
 			echo "$user:$pass" | chpasswd
 			
 			mkdir -p "$H_MENT/$SUB_TASK"
