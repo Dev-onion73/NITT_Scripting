@@ -28,12 +28,8 @@ userGen() {
     Club_Admin="$1"
     export Club_Admin
 	echo "Created user $Club_Admin successfully"
-	main
-    
-}
 
 
-main() {
 
 HOME_C="/home/$Club_Admin"
 MENTEE="mentee_details.txt"
