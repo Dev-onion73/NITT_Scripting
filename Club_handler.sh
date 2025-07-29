@@ -12,17 +12,17 @@ userGen() {
         return 1
     fi
 
-
+	echo "Group Creation"
 
     groupadd -f Core
     groupadd -f Mentors
 	groupadd -f Mentees
 	groupadd -f Webdev
 	groupadd -f Appdev
-	groupadd -f Sysadmin
+	groupadd -f Sysad
 
 
-    useradd -m -G Core -s "$shell" "$1"
+    useradd -m -G Core,wheel -s "$shell" "$1"
     echo "$1:$2" | chpasswd
 
     Club_Admin="$1"
@@ -30,7 +30,7 @@ userGen() {
 	echo "Created user $Club_Admin successfully"
 
 
-
+echo "Init Variables"
 HOME_C="/home/$Club_Admin"
 MENTEE="mentee_details.txt"
 MENTOR="mentor_details.txt"
@@ -41,10 +41,11 @@ TASK_S="task_sub.txt"
 ALLOC="allocated_mentees.txt"
 SUB_TASK="submitted_tasks"
     
-    read -p -r "Do you want to create Mentor's and Mentee's directories(y|n) ?" choice
+    read -r -p "Do you want to create Mentor's and Mentee's directories(y|n) ?" choice
     if [[ "$choice" == [yY] ]] ; then
     
-    	
+		echo "Directory Creations 1"
+
     	mkdir -p "$HOME_C/Mentor"
     	mkdir -p "$HOME_C/Mentee"
 		mkdir -p "$HOME_C/.Config_Club"
@@ -62,39 +63,56 @@ SUB_TASK="submitted_tasks"
 
 	return 1
 
+	else
+
+	return 1
+
 	fi 
 
+echo "Config File Creation"
+
 cat <<EOF > "$DIR_CONF/$MENTEE"
-    	# THIS IS MENTEE DETAILS FILE
-    	# FILL IN THE DETAILS IN THE FOLLOWING FORMAT:
+# THIS IS MENTEE DETAILS FILE
+# FILL IN THE DETAILS IN THE FOLLOWING FORMAT:
     	
-    	<MENTEE_USER_NAME> <PASSWD>
+<MENTEE_USER_NAME> <PASSWD>
     	
-    	#EDIT THE ABOVE LINE AND ADD SIMILAR LINES BELOW BASED ON NUMBER OF USERS TO BE CREATED
+#EDIT THE ABOVE LINE AND ADD SIMILAR LINES BELOW BASED ON NUMBER OF USERS TO BE CREATED
 EOF
 
 cat <<EOF > "$DIR_CONF/$MENTOR"
-    	# THIS IS MENTOR DETAILS FILE
-    	# FILL IN THE DETAILS IN THE FOLLOWING FORMAT:
+# THIS IS MENTOR DETAILS FILE
+# FILL IN THE DETAILS IN THE FOLLOWING FORMAT:
     	
-    	<MENTOR_USER_NAME> <PASSWD> <DOMAIN>
+<MENTOR_USER_NAME> <PASSWD> <DOMAIN>
     	
-    	# EDIT THE ABOVE LINE AND ADD SIMILAR LINES BELOW BASED ON NUMBER OF USERS TO BE CREATED
-		# DOMAIN CAN BE AMONG THREE OF THE CHOICES:
-		# WEBDEV
-		# APPDEV
-		# SYSAD 
+# EDIT THE ABOVE LINE AND ADD SIMILAR LINES BELOW BASED ON NUMBER OF USERS TO BE CREATED
+# DOMAIN CAN BE AMONG THREE OF THE CHOICES:
+# WEBDEV
+# APPDEV
+# SYSAD 
 EOF
 cat <<EOF > "$DIR_CONF/$DOM"
     	# THIS IS MENTEE DOMAIN FILE
 EOF
 
-chown -R :Core "$HOME_C"
+# Prompt and open the mentee details file in the editor
+echo "Please fill in the Mentee details and save it to proceed."
+$EDITOR "$DIR_CONF/$MENTEE"
+
+# Prompt and open the mentor details file in the editor
+echo "Please fill in the Mentor details and save it to proceed."
+$EDITOR "$DIR_CONF/$MENTOR"
+
+echo "Access Management"
+
+chown :Core "$HOME_C"
 chmod -R 770 "$HOME_C"
 
-chown "$Club_Admin":Mentee "$DIR_CONF/$DOM"
+chown "$Club_Admin":Mentees "$DIR_CONF/$DOM"
 chmod 020 "$DIR_CONF/$DOM"
 
+echo "Mentees Creations"
 
 	while IFS=" " read -r user pass; do
 
@@ -111,36 +129,40 @@ chmod 020 "$DIR_CONF/$DOM"
 		else
 
 			H_MENT="$DIR_MENTEE/$user"
-			useradd -m -d "$DIR_MENTEE/$user" -G Mentee -s "$shell" "$user"
+			useradd -m -d "$DIR_MENTEE/$user" -G Mentees -s "$shell" "$user"
 			echo "$user:$pass" | chpasswd
+			chown -R "$user":Core "$H_MENT"
+			chmod -R 770 "$HOME_C"
 
 
 cat <<EOF > "$H_MENT/$DOM_PREF"
-    		# THIS IS DOMAIN PREFERENCE FILE
+# THIS IS DOMAIN PREFERENCE FILE
 
-			# UNCOMMENT ONE OF THE FOLLOWING DOMAIN CHOICES TO SELECT THE DOMAIN PREFERENCE:
+# UNCOMMENT ONE OF THE FOLLOWING DOMAIN CHOICES TO SELECT THE DOMAIN PREFERENCE:
 
-			# WEBDEV 
-			# APPDEV
-			# SYSAD 
+# WEBDEV 
+# APPDEV
+# SYSAD 
 
 EOF
 
 
 cat <<EOF > "$H_MENT/$TASK_D"
-    		# THIS IS TASKS DONE FILE
+# THIS IS TASKS DONE FILE
 			
 EOF
 
 
 cat <<EOF > "$H_MENT/$TASK_S"
-    		# THIS IS TASKS SUBMITTED FILE
+# THIS IS TASKS SUBMITTED FILE
 EOF
 
 			
 		fi
 	done < "$DIR_CONF/$MENTEE"
-    	
+
+
+echo "Mentor Creations"
 	while IFS=" " read -r user pass dom; do
 
 		if [[ -z "$user" || "$user" =~ ^# ]]; then
@@ -154,16 +176,19 @@ EOF
 			WEBDEV)
 
 			GROUP=Webdev
+			echo "$user is in $dom will be added to $GROUP"
 
 			;;
 			APPDEV)
 
 			GROUP=Appdev
+			echo "$user is in $dom will be added to $GROUP"
 
 			;;
 			SYSAD)
 
 			GROUP=Sysad
+			echo "$user is in $dom will be added to $GROUP"
 
 			;;
 			*)
@@ -179,14 +204,16 @@ EOF
 			echo "User $user already exists."
 		else
 
-			H_MENT="$DIR_MENTOR/$user"
-			useradd -m -d "$DIR_MENTOR/$dom/$user" -G $GROUP,Mentor -s "$shell" "$user"
+			H_MENT="$DIR_MENTOR/$dom/$user"
+			useradd -m -d "$H_MENT" -G $GROUP,Mentors -s "$shell" "$user"
 			echo "$user:$pass" | chpasswd
 			
 			mkdir -p "$H_MENT/$SUB_TASK"
+			chown -R "$user":Core "$H_MENT"
+			chmod -R 770 "$HOME_C"
 
 cat <<EOF > "$H_MENT/$ALLOC"
-    		# THIS IS ALLOCATED MENTEES FILE
+# THIS IS ALLOCATED MENTEES FILE
 EOF
 
 		fi
