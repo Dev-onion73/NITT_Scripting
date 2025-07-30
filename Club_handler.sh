@@ -131,10 +131,11 @@ echo "Mentees Creations"
 			echo "User $user already exists."
 		else
 
-			H_MENT="$DIR_MENTEE/$user"
-			useradd -m -d "$DIR_MENTEE/$user" -G Mentees -s "$shell" "$user"
+			H_MENT="/home/$user"
+			useradd -m -G Mentees -s "$shell" "$user"
 			echo "$user:$pass" | chpasswd
 			        # Permissions: full access to user and Core
+			ln -s "/home/$user" "$DIR_MENTEE/$user"
 
 
 cat <<EOF > "$H_MENT/$DOM_PREF"
@@ -210,12 +211,14 @@ echo "Mentor Creations"
 			echo "User $user already exists."
 		else
 
-			H_MENT="$DIR_MENTOR/$dom/$user"
+			H_MENT="/home/$user"
 			useradd -m -d "$H_MENT" -G $GROUP,Mentors -s "$shell" "$user"
 			echo "$user:$pass" | chpasswd
 			
 			mkdir -p "$H_MENT/$SUB_TASK"
 			           # Permissions: full access to user and Core
+
+			ln -s "/home/$user" "$DIR_MENTOR/$dom/$user"
 
 cat <<EOF > "$H_MENT/$ALLOC"
 # THIS IS ALLOCATED MENTEES FILE
