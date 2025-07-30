@@ -106,11 +106,7 @@ $EDITOR "$DIR_CONF/$MENTOR"
 
 echo "Access Management"
 
-chown :Core "$HOME_C"
-chmod -R 770 "$HOME_C"
 
-chown "$Club_Admin":Mentees "$DIR_CONF/$DOM"
-chmod 020 "$DIR_CONF/$DOM"
 
 echo "Mentees Creations"
 
@@ -131,8 +127,7 @@ echo "Mentees Creations"
 			H_MENT="$DIR_MENTEE/$user"
 			useradd -m -d "$DIR_MENTEE/$user" -G Mentees -s "$shell" "$user"
 			echo "$user:$pass" | chpasswd
-			chown -R "$user":Core "$H_MENT"
-			chmod -R 770 "$HOME_C"
+			        # Permissions: full access to user and Core
 
 
 cat <<EOF > "$H_MENT/$DOM_PREF"
@@ -157,6 +152,11 @@ cat <<EOF > "$H_MENT/$TASK_S"
 # THIS IS TASKS SUBMITTED FILE
 EOF
 
+
+
+chown "$user":Mentees "$H_MENT" "$H_MENT/$DOM_PREF" "$H_MENT/$TASK_D" "$H_MENT/$TASK_S"
+chmod 700 "$H_MENT"  # Owner has full access, others have no access
+chmod 640 "$H_MENT/$DOM_PREF" "$H_MENT/$TASK_D" "$H_MENT/$TASK_S"  # Only owner has full access, group can read
 			
 		fi
 	done < "$DIR_CONF/$MENTEE"
@@ -209,17 +209,30 @@ echo "Mentor Creations"
 			echo "$user:$pass" | chpasswd
 			
 			mkdir -p "$H_MENT/$SUB_TASK"
-			chown -R "$user":Core "$H_MENT"
-			chmod -R 770 "$HOME_C"
+			           # Permissions: full access to user and Core
 
 cat <<EOF > "$H_MENT/$ALLOC"
 # THIS IS ALLOCATED MENTEES FILE
 EOF
 
+			chown "$user":$GROUP "$H_MENT" "$H_MENT/$ALLOC" "$H_MENT/$SUB_TASK"
+            chmod 700 "$H_MENT"  # Owner has full access, others have no access
+            chmod 750 "$H_MENT/$ALLOC" "$H_MENT/$SUB_TASK"  # Group has read/write access, others have no access
+
 		fi
 	done < "$DIR_CONF/$MENTOR"
 
+
+chown :Core "$HOME_C"
+chmod 770 "$HOME_C"
+
+chown "$Club_Admin":Mentees "$DIR_CONF/$DOM"
+chmod 020 "$DIR_CONF/$DOM"
+
+
 }
+
+
 
 
     	
