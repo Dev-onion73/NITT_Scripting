@@ -5,6 +5,7 @@ shell="/bin/bash"
 userGen() {
     
     
+    
     if [ $# -lt 2 ] ; then
         echo "Usage: userGen <USER> <PASSWD>";
         
@@ -103,6 +104,13 @@ $EDITOR "$DIR_CONF/$MENTEE"
 echo "Please fill in the Mentor details and save it to proceed."
 $EDITOR "$DIR_CONF/$MENTOR"
 
+echo "Access Management"
+
+chown -R "$Club_Admin":Core "$HOME_C"
+chmod 770 "$HOME_C"  # Full access to owner and Core group, others have no access
+
+chown "$Club_Admin":Mentees "$DIR_CONF/$DOM"
+chmod 720 "$DIR_CONF/$DOM"
 
 echo "Mentees Creations"
 
