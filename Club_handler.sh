@@ -5,7 +5,6 @@ shell="/bin/bash"
 userGen() {
     
     
-    
     if [ $# -lt 2 ] ; then
         echo "Usage: userGen <USER> <PASSWD>";
         
@@ -104,16 +103,6 @@ $EDITOR "$DIR_CONF/$MENTEE"
 echo "Please fill in the Mentor details and save it to proceed."
 $EDITOR "$DIR_CONF/$MENTOR"
 
-echo "Access Management"
-
-# chown "$Club_Admin":Core "$HOME_C"
-# chmod 770 "$HOME_C"  # Full access to owner and Core group, others have no access
-
-# chown "$Club_Admin":Core "$DIR_CONF"
-# chmod 770 "$DIR_CONF"  # Full access to Core group
-
-# chown "$Club_Admin":Core "$DIR_CONF/$DOM"
-# chmod 770 "$DIR_CONF/$DOM"  # Full access to Core group
 
 echo "Mentees Creations"
 
@@ -134,7 +123,7 @@ echo "Mentees Creations"
 			H_MENT="/home/$user"
 			useradd -m -G Mentees -s "$shell" "$user"
 			echo "$user:$pass" | chpasswd
-			        # Permissions: full access to user and Core
+			   
 			ln -s "/home/$user" "$DIR_MENTEE/$user"
 
 
@@ -160,11 +149,6 @@ cat <<EOF > "$H_MENT/$TASK_S"
 # THIS IS TASKS SUBMITTED FILE
 EOF
 
-
-
-# chown -R "$user" "$H_MENT" "$H_MENT/$DOM_PREF" "$H_MENT/$TASK_D" "$H_MENT/$TASK_S"
-# chmod -R 700 "$H_MENT"  # Owner has full access, others have no access
-			
 		fi
 	done < "$DIR_CONF/$MENTEE"
 
@@ -216,7 +200,6 @@ echo "Mentor Creations"
 			echo "$user:$pass" | chpasswd
 			
 			mkdir -p "$H_MENT/$SUB_TASK"
-			           # Permissions: full access to user and Core
 
 			ln -s "/home/$user" "$DIR_MENTOR/$dom/$user"
 
@@ -224,16 +207,8 @@ cat <<EOF > "$H_MENT/$ALLOC"
 # THIS IS ALLOCATED MENTEES FILE
 EOF
 
-			# chown -R "$user" "$H_MENT" "$H_MENT/$ALLOC" "$H_MENT/$SUB_TASK"
-            # chmod -R 700 "$H_MENT"  # Owner has full access, others have no access
-
 		fi
 	done < "$DIR_CONF/$MENTOR"
-
-
- # Set permissions for Core/Admin
-
-
 
 }
 
