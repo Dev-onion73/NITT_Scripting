@@ -106,7 +106,14 @@ $EDITOR "$DIR_CONF/$MENTOR"
 
 echo "Access Management"
 
+# chown "$Club_Admin":Core "$HOME_C"
+# chmod 770 "$HOME_C"  # Full access to owner and Core group, others have no access
 
+# chown "$Club_Admin":Core "$DIR_CONF"
+# chmod 770 "$DIR_CONF"  # Full access to Core group
+
+# chown "$Club_Admin":Core "$DIR_CONF/$DOM"
+# chmod 770 "$DIR_CONF/$DOM"  # Full access to Core group
 
 echo "Mentees Creations"
 
@@ -154,9 +161,8 @@ EOF
 
 
 
-chown "$user":Mentees "$H_MENT" "$H_MENT/$DOM_PREF" "$H_MENT/$TASK_D" "$H_MENT/$TASK_S"
-chmod 700 "$H_MENT"  # Owner has full access, others have no access
-chmod 640 "$H_MENT/$DOM_PREF" "$H_MENT/$TASK_D" "$H_MENT/$TASK_S"  # Only owner has full access, group can read
+# chown -R "$user" "$H_MENT" "$H_MENT/$DOM_PREF" "$H_MENT/$TASK_D" "$H_MENT/$TASK_S"
+# chmod -R 700 "$H_MENT"  # Owner has full access, others have no access
 			
 		fi
 	done < "$DIR_CONF/$MENTEE"
@@ -215,19 +221,15 @@ cat <<EOF > "$H_MENT/$ALLOC"
 # THIS IS ALLOCATED MENTEES FILE
 EOF
 
-			chown "$user":$GROUP "$H_MENT" "$H_MENT/$ALLOC" "$H_MENT/$SUB_TASK"
-            chmod 700 "$H_MENT"  # Owner has full access, others have no access
-            chmod 750 "$H_MENT/$ALLOC" "$H_MENT/$SUB_TASK"  # Group has read/write access, others have no access
+			# chown -R "$user" "$H_MENT" "$H_MENT/$ALLOC" "$H_MENT/$SUB_TASK"
+            # chmod -R 700 "$H_MENT"  # Owner has full access, others have no access
 
 		fi
 	done < "$DIR_CONF/$MENTOR"
 
 
-chown :Core "$HOME_C"
-chmod 770 "$HOME_C"
+ # Set permissions for Core/Admin
 
-chown "$Club_Admin":Mentees "$DIR_CONF/$DOM"
-chmod 020 "$DIR_CONF/$DOM"
 
 
 }
