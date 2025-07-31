@@ -31,15 +31,15 @@ userGen() {
 
 
 echo "Init Variables"
-HOME_C="/home/$Club_Admin"
-MENTEE="mentee_details.txt"
-MENTOR="mentor_details.txt"
-DOM="mentees_domain.txt"
-DOM_PREF="dom_pref.txt"
-TASK_D="task_done.txt"
-TASK_S="task_sub.txt"
-ALLOC="allocated_mentees.txt"
-SUB_TASK="submitted_tasks"
+export HOME_C="/home/$Club_Admin"
+export MENTEE="mentee_details.txt"
+export MENTOR="mentor_details.txt"
+export DOM="mentees_domain.txt"
+export DOM_PREF="dom_pref.txt"
+export TASK_D="task_done.txt"
+export TASK_S="task_sub.txt"
+export ALLOC="allocated_mentees.txt"
+export SUB_TASK="submitted_tasks"
     
     read -r -p "Do you want to create Mentor's and Mentee's directories(y|n) ?" choice
     if [[ "$choice" == [yY] ]] ; then
@@ -52,9 +52,9 @@ SUB_TASK="submitted_tasks"
     	
     	
     	
-    	DIR_MENTEE="$HOME_C/Mentee"
-    	DIR_MENTOR="$HOME_C/Mentor"
-		DIR_CONF="$HOME_C/.Config_Club"
+    	export DIR_MENTEE="$HOME_C/Mentee"
+    	export DIR_MENTOR="$HOME_C/Mentor"
+		export DIR_CONF="$HOME_C/.Config_Club"
 
 		mkdir -p "$DIR_MENTOR/WEBDEV"
 		mkdir -p "$DIR_MENTOR/APPDEV"
@@ -138,13 +138,7 @@ echo "Mentees Creations"
 cat <<EOF > "$H_MENT/$DOM_PREF"
 # THIS IS DOMAIN PREFERENCE FILE
 
-# ARRANGE THE FOLLOWING DOMAIN CHOICES IN ORDER 
-# TOPMOST - HIGHEST PRIORITY AND BOTTOM-MOST - LOWEST PRIORITY
-# TO SELECT THE DOMAIN PREFERENCE:
 
-# WEBDEV 
-# APPDEV
-# SYSAD 
 
 EOF
 
@@ -171,7 +165,7 @@ echo "Mentor Creations"
 			continue
 		fi
 
-		GROUP=""
+		export GROUP=""
 
 		case "$dom" in 
 			WEBDEV)
@@ -223,6 +217,20 @@ EOF
 }
 
 domainpref() {
+
+	user="$(whoami)"
+	D1="$1"
+	D2="$2"
+	D3="$3"
+
+	{ echo "Domain 1: $D1", 
+	echo "Domain 2: $D2",
+	echo "Domain 3: $D3" 
+	} >> "$DIR_MENTEE/$user/$DOM_PREF"
+
+	echo "$user $D1 $D2 $D3" >> "$DIR_CONF/$DOM"
+
+
 
 	
 }
