@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e
+
+SCRIPT="Club_handler.sh"
+DEST="/etc/profile.d"
+
+# Ensure we're running as root
+if [[ "$EUID" -ne 0 ]]; then
+  echo "Please run this script as root or using sudo"
+  exit 1
+fi
+
+echo "Setting up functions system-wide..."
+
+if [[ ! -f "$SCRIPT" ]]; then
+  echo "Source file '$SCRIPT' not found."
+  exit 1
+fi
+
+
+echo "Copying $SCRIPT to $DEST"
+cp "$SCRIPT" "$DEST/$SCRIPT"
+
+chmod +x "$DEST/$SCRIPT"
+
+BASHRC=""
+if [[ -f /etc/bash.bashrc ]]; then
+  BASHRC="/etc/bash.bashrc"
+elif [[ -f /etc/bashrc ]]; then
+  BASHRC="/etc/bashrc"
+fi
+
+if [[ -n "$BASHRC" ]] && ! grep -q "Club_handler.sh" "$BASHRC"; then
+  echo "[ -f $DEST_FILE ] && source $DEST_FILE" >> "$BASHRC"
+  echo "Added sourcing to $BASHRC"
+else
+  echo "Already sourced or BASHRC not found"
+fi
+
+echo "Club-Management functions are successfully setup to begin setting up run the command: userGen <ADMIN-NAME> <PASSWD> to create the ADMIN user and Member management"
