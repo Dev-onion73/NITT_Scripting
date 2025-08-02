@@ -5,6 +5,9 @@ set -e
 SCRIPT="Club_handler.sh"
 DEST="/etc/profile.d"
 
+WRAP="wrapper"
+W_DEST="/usr/local/bin/club"
+
 # Ensure we're running as root
 if [[ "$EUID" -ne 0 ]]; then
   echo "Please run this script as root or using sudo"
@@ -23,6 +26,10 @@ echo "Copying $SCRIPT to $DEST"
 cp "$SCRIPT" "$DEST/$SCRIPT"
 
 chmod +x "$DEST/$SCRIPT"
+
+cp "$WRAP" "$W_DEST"
+
+chmod +x "$W_DEST"
 
 BASHRC=""
 if [[ -f /etc/bash.bashrc ]]; then

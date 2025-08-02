@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Load all function definitions
+source /etc/profile.d/Club_handler.sh
+
+# Ensure at least one argument (the function name)
+if [[ $# -lt 1 ]]; then
+    echo "Usage: clubctl <function> [args...]"
+    echo "Available functions: userGen, domainpref"
+    exit 1
+fi
+
+# Extract command name and shift it from the list
+cmd="$1"
+shift
+
+# Dispatch to the appropriate function
+case "$cmd" in
+    userGen)
+        userGen "$@"
+        ;;
+    domainpref)
+        domainpref "$@"
+        ;;
+    *)
+        echo "Unknown command: $cmd"
+        echo "type <club help> for to check available commands"
+        exit 1
+        ;;
+esac
