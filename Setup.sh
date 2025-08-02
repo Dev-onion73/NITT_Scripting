@@ -32,7 +32,7 @@ elif [[ -f /etc/bashrc ]]; then
 fi
 
 if [[ -n "$BASHRC" ]] && ! grep -q "Club_handler.sh" "$BASHRC"; then
-  echo "[ -f $DEST_FILE ] && source $DEST_FILE" >> "$BASHRC"
+  echo "[ -f $DEST/$SCRIPT ] && source $DEST/$SCRIPT" >> "$BASHRC"
   echo "Added sourcing to $BASHRC"
 else
   echo "Already sourced or BASHRC not found"
