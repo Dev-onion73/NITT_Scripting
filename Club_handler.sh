@@ -6,7 +6,7 @@ userGen() {
     
     
     
-    if [ $# -lt 2 ] ; then
+    if [ $# -ne 2 ] ; then
         echo "Usage: userGen <USER> <PASSWD>";
         
         return 1
@@ -225,23 +225,55 @@ echo "$user $cap" >> "$DIR_CONF/$CAP"
 }
 
 domainpref() {
+    if [ $# -ne 3 ]; then
+        echo "Usage: domainpref <PREF1> <PREF2> <PREF3>"
+        return 1
+    fi
 
-	user="$(whoami)"
-	D1="$1"
-	D2="$2"
-	D3="$3"
+    user="$(whoami)"
+    D1="$1"
+    D2="$2"
+    D3="$3"
 
-	{ echo "Domain 1: $D1", 
-	echo "Domain 2: $D2",
-	echo "Domain 3: $D3" 
-	} >> "$DIR_MENTEE/$user/$DOM_PREF"
+    # Valid domain options
+    VALID=("WEBDEV" "APPDEV" "SYSAD")
 
-	echo "$user $D1 $D2 $D3" >> "$DIR_CONF/$DOM"
+    # Function to check if a domain is valid
+    is_valid() {
+        local value="$1"
+        for v in "${VALID[@]}"; do
+            [[ "$v" == "$value" ]] && return 0
+        done
+        return 1
+    }
 
+    # Ensure each input is valid
+    for domain in "$D1" "$D2" "$D3"; do
+        if ! is_valid "$domain"; then
+            echo "Invalid domain: $domain. Allowed: WEBDEV, APPDEV, SYSAD"
+            return 1
+        fi
+    done
 
+    # Check for uniqueness
+    if [[ "$D1" == "$D2" || "$D1" == "$D3" || "$D2" == "$D3" ]]; then
+        echo "All domain preferences must be unique."
+        return 1
+    fi
 
-	
+    {
+        echo "Domain 1: $D1"
+        echo "Domain 2: $D2"
+        echo "Domain 3: $D3"
+    } >> "$DIR_MENTEE/$user/$DOM_PREF"
+
+	echo "successfully written preferences into $DIR_MENTEE/$user/$DOM_PREF"
+
+    echo "$user $D1 $D2 $D3" >> "$DIR_CONF/$DOM"
+
+    echo "Preferences saved successfully for $user."
 }
+
 
 
 
