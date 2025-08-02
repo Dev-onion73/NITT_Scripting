@@ -21,12 +21,18 @@ if [[ ! -f "$SCRIPT" ]]; then
   exit 1
 fi
 
+if [[ ! -f "$WRAP" ]]; then
+  echo "Wrapper file '$WRAP' not found."
+  exit 1
+fi
+
 
 echo "Copying $SCRIPT to $DEST"
 cp "$SCRIPT" "$DEST/$SCRIPT"
 
 chmod +x "$DEST/$SCRIPT"
 
+echo "Copying $WRAP to $W_DEST"
 cp "$WRAP" "$W_DEST"
 
 chmod +x "$W_DEST"

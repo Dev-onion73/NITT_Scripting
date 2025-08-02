@@ -40,6 +40,7 @@ export TASK_D="task_done.txt"
 export TASK_S="task_sub.txt"
 export ALLOC="allocated_mentees.txt"
 export SUB_TASK="submitted_tasks"
+export CAP="mentee_cap.txt"
     
     read -r -p "Do you want to create Mentor's and Mentee's directories(y|n) ?" choice
     if [[ "$choice" == [yY] ]] ; then
@@ -70,6 +71,10 @@ export SUB_TASK="submitted_tasks"
 	fi 
 
 echo "Config File Creation"
+
+cat <<EOF > "$DIR_CONF/$CAP"
+# THIS IS MENTOR CAPACITY FILE
+EOF
 
 cat <<EOF > "$DIR_CONF/$MENTEE"
 # THIS IS MENTEE DETAILS FILE
@@ -158,7 +163,7 @@ EOF
 
 
 echo "Mentor Creations"
-	while IFS=" " read -r user pass dom; do
+	while IFS=" " read -r user pass dom cap; do
 
 		if [[ -z "$user" || "$user" =~ ^# ]]; then
 
@@ -188,7 +193,7 @@ echo "Mentor Creations"
 			;;
 			*)
 
-			echo "Skipping $user No domain selected"
+			echo "Skipping $user No domain selected Invalid domain: $dom"
 			continue
 
 			;;
@@ -210,6 +215,9 @@ echo "Mentor Creations"
 cat <<EOF > "$H_MENT/$ALLOC"
 # THIS IS ALLOCATED MENTEES FILE
 EOF
+
+echo "$user $cap" >> "$DIR_CONF/$CAP"
+
 
 		fi
 	done < "$DIR_CONF/$MENTOR"
