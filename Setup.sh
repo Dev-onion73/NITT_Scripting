@@ -14,7 +14,27 @@ if [[ "$EUID" -ne 0 ]]; then
   exit 1
 fi
 
-echo "Setting up functions system-wide..."
+
+read -r -p "Would you like to proceed to installation(y|n) ?" choice
+
+if [[ "$choice" == [yY] ]] ; then
+    
+  echo "Setting up functions system-wide..."
+		
+	elif [[ "$choice" == [nN] ]] ; then
+
+	echo "Cancelled the installation"
+    return 1
+
+	else
+
+    echo "Cancelled the installation"
+    echo "ERROR: Invalid input"
+	return 1
+
+	fi 
+
+
 
 if [[ ! -f "$SCRIPT" ]]; then
   echo "Source file '$SCRIPT' not found."
