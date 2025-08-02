@@ -15,9 +15,42 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 
-read -r -p "Would you like to proceed to installation(y|n) ?" choice
 
-if [[ "$choice" == [yY] ]] ; then
+
+
+
+if [[ ! -f "$SCRIPT" ]]; then
+  echo "Source file '$SCRIPT' not found."
+  exit 1
+fi
+
+if [[ ! -f "$WRAP" ]]; then
+  echo "Wrapper file '$WRAP' not found."
+  exit 1
+fi
+
+if [[ -f $DEST/$SCRIPT ]]; then
+    read -r -p "File exists. Do you want to update ?(y|n): " choice
+    if [[ "$choice" == [yY] ]] ; then
+    
+  echo "Updating functions"
+		
+	elif [[ "$choice" == [nN] ]] ; then
+
+	echo "Cancelled the Update"
+    return 1
+
+	else
+
+    echo "Cancelled the Update"
+    echo "ERROR: Invalid input"
+	return 1
+
+	fi 
+else
+  read -r -p "Would you like to proceed to installation(y|n) ?" choice
+
+  if [[ "$choice" == [yY] ]] ; then
     
   echo "Setting up functions system-wide..."
 		
@@ -33,17 +66,6 @@ if [[ "$choice" == [yY] ]] ; then
 	return 1
 
 	fi 
-
-
-
-if [[ ! -f "$SCRIPT" ]]; then
-  echo "Source file '$SCRIPT' not found."
-  exit 1
-fi
-
-if [[ ! -f "$WRAP" ]]; then
-  echo "Wrapper file '$WRAP' not found."
-  exit 1
 fi
 
 
