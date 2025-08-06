@@ -222,6 +222,49 @@ echo "$user $cap" >> "$DIR_CONF/$CAP"
 		fi
 	done < "$DIR_CONF/$MENTOR"
 
+echo "Exporting Env variables"
+
+# Create env file
+ENV_FILE="/etc/profile.d/club_env.sh"
+
+echo "Exporting environment variables globally to $ENV_FILE"
+
+cat <<EOF > "$ENV_FILE"
+# Club Environment Variables
+export Club_Admin="$Club_Admin"
+export HOME_C="$HOME_C"
+export MENTEE="$MENTEE"
+export MENTOR="$MENTOR"
+export DOM="$DOM"
+export DOM_PREF="$DOM_PREF"
+export TASK_D="$TASK_D"
+export TASK_S="$TASK_S"
+export ALLOC="$ALLOC"
+export SUB_TASK="$SUB_TASK"
+export CAP="$CAP"
+export DIR_MENTEE="$DIR_MENTEE"
+export DIR_MENTOR="$DIR_MENTOR"
+export DIR_CONF="$DIR_CONF"
+EOF
+
+BASHRC=""
+if [[ -f /etc/bash.bashrc ]]; then
+  BASHRC="/etc/bash.bashrc"
+elif [[ -f /etc/bashrc ]]; then
+  BASHRC="/etc/bashrc"
+fi
+
+if [[ -n "$BASHRC" ]] && ! grep -q "club_env.sh" "$BASHRC"; then
+  echo "[ -f /etc/profile.d/club_env.sh ] && source /etc/profile.d/club_env.sh" >> "$BASHRC"
+  echo "Added sourcing to $BASHRC"
+else
+  echo "Already sourced or BASHRC not found"
+fi
+
+# Secure the env file
+chmod 644 "$ENV_FILE"
+
+
 }
 
 domainpref() {
