@@ -115,7 +115,11 @@ chown -R "$Club_Admin":Core "$HOME_C"
 chmod 770 "$HOME_C"  # Full access to owner and Core group, others have no access
 
 chown "$Club_Admin":Mentees "$DIR_CONF/$DOM"
-chmod 720 "$DIR_CONF/$DOM"
+chmod 760 "$DIR_CONF/$DOM"
+
+chgrp Mentees "$DIR_CONF"
+chmod 750 "$HOME_C"
+
 
 echo "Mentees Creations"
 
@@ -157,6 +161,8 @@ EOF
 cat <<EOF > "$H_MENT/$TASK_S"
 # THIS IS TASKS SUBMITTED FILE
 EOF
+
+chown -R "$user" "$H_MENT"
 
 		fi
 	done < "$DIR_CONF/$MENTEE"
@@ -308,9 +314,9 @@ domainpref() {
         echo "Domain 1: $D1"
         echo "Domain 2: $D2"
         echo "Domain 3: $D3"
-    } >> "$DIR_MENTEE/$user/$DOM_PREF"
+    } >> "$HOME/$DOM_PREF"
 
-	echo "successfully written preferences into $DIR_MENTEE/$user/$DOM_PREF"
+	echo "successfully written preferences into /$user/$DOM_PREF"
 
     echo "$user $D1 $D2 $D3" >> "$DIR_CONF/$DOM"
 
