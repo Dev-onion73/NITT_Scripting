@@ -143,6 +143,12 @@ echo "Mentees Creations"
 			   
 			ln -s "/home/$user" "$DIR_MENTEE/$user"
 
+            setfacl -m g:core:rwx /home/$user
+            setfacl -m g:mentee:rx /home/$user
+
+
+
+
 
 cat <<EOF > "$H_MENT/$DOM_PREF"
 # THIS IS DOMAIN PREFERENCE FILE
@@ -222,7 +228,7 @@ cat <<EOF > "$H_MENT/$ALLOC"
 # THIS IS ALLOCATED MENTEES FILE
 EOF
 
-echo "$user $cap" >> "$DIR_CONF/$CAP"
+echo "$user $dom $cap" >> "$DIR_CONF/$CAP"
 
 
 		fi
@@ -274,6 +280,8 @@ chmod 644 "$ENV_FILE"
 }
 
 domainpref() {
+
+
     if [[ $# -gt 3 || $# -lt 1 ]]; then
         echo "Must have atleast 1 or Maximum of 3 arguments"
 		echo "Usage: domainpref <PREF1> <PREF2> <PREF3> "
@@ -339,18 +347,19 @@ domainpref() {
 }
 
 
+mentorAlloc() {
 
+    if [[ "$EUID" -ne 0 ]]; then
+  echo "Please run this script as root or using sudo"
+  echo "Usage: sudo club mentorAllocation"
+  exit 1
+    fi
 
-
-
-
-
-
-mentorAllocation() {
     mentee_file="$DIR_CONF/$DOM"
     mentor_file="$DIR_CONF/$CAP"
+    echo "$mentee_file $mentor_file"
 
-    echo "$" >> "$DIR_CONF/$DOM"
+    echo "$" >> "$mentee_file"
 
     declare -A mentor_cap
     declare -A domain_mentors
@@ -405,11 +414,11 @@ mentorAllocation() {
                     echo "Allocated $mentee to $mentor at domain $pref"
                     
                     # # Create mentor directory & log allocation
-                    # mentor_home="$HOME/$mentor"
+                    mentor_home="/home/$mentor"
                     # mkdir -p "$mentor_home"
-                    # echo "$mentee" >> "$mentor_home/allocatedMentees.txt"
+                    echo "$mentee" >> "$mentor_home/$ALLOC"
 
-                    # allocated=true
+                    allocated=true
                     break 2  # Break out of both loops
                 fi
             done

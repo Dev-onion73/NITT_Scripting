@@ -2,6 +2,7 @@
 
 # Load all function definitions
 source "/etc/profile.d/Club_handler.sh"
+source /etc/profile.d/club_env.sh
 
 # Ensure at least one argument (the function name)
 if [[ $# -lt 1 ]]; then
@@ -21,6 +22,9 @@ case "$cmd" in
         ;;
     domainpref)
         domainpref "$@"
+        ;;
+    mentorAlloc)
+        mentorAlloc
         ;;
     *)
         echo "Unknown command: $cmd"
