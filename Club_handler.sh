@@ -413,9 +413,9 @@ mentorAlloc() {
                     
                     # # Create mentor directory & log allocation
                     mentor_home="/home/$mentor"
-                    mkdir -p "/home/$mentee/$pref/tasks"
+                    # mkdir -p "/home/$mentee/$pref/tasks"
                     echo "$mentee" >> "$mentor_home/$ALLOC"
-                    chgrp $mentor /home/$mentee
+                    chgrp Mentors /home/$mentee
                     chmod 770 /home/$mentee
 
 
@@ -437,10 +437,67 @@ mentorAlloc() {
     # echo "Check ~/MENTOR_NAME/allocatedMentees.txt files for final allocation results."
 }
 
-
-
-
-
-
-
     	
+submitTask() {
+    user="$1"  # Optional: You can pass a user, or use current user
+    [[ -z "$user" ]] && user=$(whoami)
+
+    if id -nG "$user" | grep -qw "Mentees"; then
+        read -r -p "Enter task name: " t_name
+        read -r -p "Enter task id: " t_id
+        read -r -p "Enter domain: " dom
+
+        mkdir "$HOME/$dom/$t_id"
+        touch "$HOME/$dom/$t_name.task"
+
+        echo "$t_id $t_name" >> "$HOME/$TASK_S"
+
+        
+        # -- action for grp1 --
+    elif id -nG "$user" | grep -qw "Mentors"; then
+        echo "$user is in grp2"
+        
+        mentee_list_file="$HOME/allocatedMentees.txt"
+        [[ ! -f "$mentee_list_file" ]] && { echo "No mentees allocated to you."; return; }
+
+        while read -r mentee; do
+            mentee_home="/home/$mentee"
+            [[ ! -d "$mentee_home" ]] && continue
+
+
+            read -r "$mentee_home/$TASK_S"
+
+            for domain in "$mentee_home"/*; do
+                [[ ! -d "$domain" ]] && continue
+
+                domain_name=$(basename "$domain")
+                for task_dir in "$domain"/*/; do
+                    [[ ! -d "$task_dir" ]] && continue
+
+                    task_id=$(basename "$task_dir")
+
+                    # Target path inside mentor’s domain folder
+                    link_path="$HOME/$domain_name/$mentee/$task_id"
+                    mkdir -p "$(dirname "$link_path")"
+
+                    # Create symlink if it doesn't exist
+                    [[ -L "$link_path" || -e "$link_path" ]] || ln -s "$task_dir" "$link_path"
+
+                    # Check if task dir is non-empty
+                    if [ "$(ls -A "$task_dir")" ]; then
+                        echo "$mentee $task_id $domain_name" >> "$HOME/$TASK_C"
+                        echo "Task completed: $mentee → $task_id in $domain_name"
+                    else
+                        echo "Task pending: $mentee → $task_id in $domain_name"
+                    fi
+                done
+            done
+        done < "$mentee_list_file"
+
+
+
+    else
+        echo "$user is in neither a Mentor nor a Mentee"
+        # -- optional fallback action --
+    fi
+}
