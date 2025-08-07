@@ -413,7 +413,7 @@ mentorAlloc() {
                     
                     # # Create mentor directory & log allocation
                     mentor_home="/home/$mentor"
-                    # mkdir -p "$mentor_home"
+                    mkdir -p "/home/$mentee/$pref/tasks"
                     echo "$mentee" >> "$mentor_home/$ALLOC"
                     chgrp $mentor /home/$mentee
                     chmod 770 /home/$mentee
