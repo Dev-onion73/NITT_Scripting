@@ -274,18 +274,20 @@ chmod 644 "$ENV_FILE"
 }
 
 domainpref() {
-    if [ $# -ne 3 ]; then
-        echo "Usage: domainpref <PREF1> <PREF2> <PREF3>"
+    if [[ $# -gt 3 || $# -lt 1 ]]; then
+        echo "Must have atleast 1 or Maximum of 3 arguments"
+		echo "Usage: domainpref <PREF1> <PREF2> <PREF3> "
         return 1
     fi
 
     user="$(whoami)"
-    D1="$1"
-    D2="$2"
-    D3="$3"
+    D1="${1:-NULL}"
+	D2="${2:-NULL}"
+	D3="${3:-NULL}"
+
 
     # Valid domain options
-    VALID=("WEBDEV" "APPDEV" "SYSAD")
+    VALID=("WEBDEV" "APPDEV" "SYSAD" "NULL")
 
     # Function to check if a domain is valid
     is_valid() {
@@ -305,10 +307,13 @@ domainpref() {
     done
 
     # Check for uniqueness
-    if [[ "$D1" == "$D2" || "$D1" == "$D3" || "$D2" == "$D3" ]]; then
-        echo "All domain preferences must be unique."
-        return 1
-    fi
+    if { [[ "$D1" == "$D2" && "$D1" != "NULL" ]]; } || \
+   { [[ "$D1" == "$D3" && "$D1" != "NULL" ]]; } || \
+   { [[ "$D2" == "$D3" && "$D2" != "NULL" ]]; }; then
+    echo "All domain preferences must be unique (excluding NULL)."
+    return 1
+	fi
+
 
     {
         echo "Domain 1: $D1"
@@ -321,6 +326,16 @@ domainpref() {
     echo "$user $D1 $D2 $D3" >> "$DIR_CONF/$DOM"
 
     echo "Preferences saved successfully for $user."
+
+	for domain in "$D1" "$D2" "$D3"; do
+    if [[ "$domain" != "NULL" ]]; then
+        user_domain_dir="$HOME/$domain"
+        mkdir -p "$user_domain_dir"
+    fi
+	done
+
+
+	
 }
 
 
