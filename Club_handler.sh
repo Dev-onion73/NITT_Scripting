@@ -49,13 +49,13 @@ export CAP="mentee_cap.txt"
 
     	mkdir -p "$HOME_C/Mentor"
     	mkdir -p "$HOME_C/Mentee"
-		mkdir -p "$HOME_C/.Config_Club"
+		mkdir -p "/etc/.Config_Club"
     	
     	
     	
     	export DIR_MENTEE="$HOME_C/Mentee"
     	export DIR_MENTOR="$HOME_C/Mentor"
-		export DIR_CONF="$HOME_C/.Config_Club"
+		export DIR_CONF="/etc/.Config_Club"
 
 		mkdir -p "$DIR_MENTOR/WEBDEV"
 		mkdir -p "$DIR_MENTOR/APPDEV"
