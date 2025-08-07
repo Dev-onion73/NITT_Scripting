@@ -143,8 +143,6 @@ echo "Mentees Creations"
 			   
 			ln -s "/home/$user" "$DIR_MENTEE/$user"
 
-            setfacl -m g:core:rwx /home/$user
-            setfacl -m g:mentee:rx /home/$user
 
 
 
@@ -417,6 +415,9 @@ mentorAlloc() {
                     mentor_home="/home/$mentor"
                     # mkdir -p "$mentor_home"
                     echo "$mentee" >> "$mentor_home/$ALLOC"
+                    chgrp $mentor /home/$mentee
+                    chmod 770 /home/$mentee
+
 
                     allocated=true
                     break 2  # Break out of both loops
