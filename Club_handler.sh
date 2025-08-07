@@ -98,7 +98,7 @@ cat <<EOF > "$DIR_CONF/$MENTOR"
 # SYSAD 
 EOF
 cat <<EOF > "$DIR_CONF/$DOM"
-    	# THIS IS MENTEE DOMAIN FILE
+# THIS IS MENTEE DOMAIN FILE
 EOF
 
 # Prompt and open the mentee details file in the editor
@@ -337,6 +337,97 @@ domainpref() {
 
 	
 }
+
+
+
+
+
+
+
+
+
+mentorAllocation() {
+    mentee_file="$DIR_CONF/$DOM"
+    mentor_file="$DIR_CONF/$CAP"
+
+    echo "$" >> "$DIR_CONF/$DOM"
+
+    declare -A mentor_cap
+    declare -A domain_mentors
+    declare -A mentor_domain
+
+    echo "Reading mentor capacities from '$mentor_file'..."
+    echo "---------------------------------------------"
+    
+    while IFS= read -r line; do
+        # Skip empty and comment lines
+        [[ -z "$line" || "$line" =~ ^# ]] && continue
+
+        read -r mentor domain capacity <<< "$line"
+        echo "Mentor: $mentor | Domain: $domain | Capacity: $capacity"
+        mentor_cap["$mentor"]=$capacity
+        domain_mentors["$domain"]+="$mentor "
+        mentor_domain["$mentor"]=$domain
+    done < "$mentor_file"
+
+    echo -e "\nMentor capacity load complete.\n"
+
+    echo "Reading mentees from '$mentee_file'..."
+    echo "---------------------------------------------"
+
+    while IFS= read -r line; do
+        # Stop reading if line contains only a single $
+    if [[ "$line" == '$' ]]; then
+        echo "Encountered EOF marker '\$' in mentee file. Stopping read."
+        break
+    fi
+
+    # Skip empty and comment lines
+    [[ -z "$line" || "$line" =~ ^# ]] && continue
+
+    read -r mentee pref1 pref2 pref3 <<< "$line"
+
+        read -r mentee pref1 pref2 pref3 <<< "$line"
+
+        # echo -e "\nProcessing mentee: $mentee"
+        # echo "   Preferences: 1) $pref1  2) $pref2  3) $pref3"
+
+        allocated=false
+
+        for pref in "$pref1" "$pref2" "$pref3"; do
+            [[ "$pref" == "NULL" ]] && continue
+            # echo "   Checking domain: $pref"
+
+            for mentor in ${domain_mentors[$pref]}; do
+                # echo "      Trying mentor: $mentor (Remaining capacity: ${mentor_cap[$mentor]})"
+                if (( mentor_cap["$mentor"] > 0 )); then
+                    (( mentor_cap["$mentor"]-- ))
+                    echo "Allocated $mentee to $mentor at domain $pref"
+                    
+                    # # Create mentor directory & log allocation
+                    # mentor_home="$HOME/$mentor"
+                    # mkdir -p "$mentor_home"
+                    # echo "$mentee" >> "$mentor_home/allocatedMentees.txt"
+
+                    # allocated=true
+                    break 2  # Break out of both loops
+                fi
+            done
+
+            echo "No available mentors in $pref"
+        done
+
+        if [[ "$allocated" != true ]]; then
+            echo "$mentee could not be allocated to any domain."
+        fi
+
+    done < "$mentee_file"
+
+    echo -e "\nMentor allocation complete!"
+    # echo "Check ~/MENTOR_NAME/allocatedMentees.txt files for final allocation results."
+}
+
+
 
 
 
