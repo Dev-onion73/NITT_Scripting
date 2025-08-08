@@ -544,7 +544,7 @@ submitTask() {
 #STATUS
 
 checkstat() {
-    # Ensure we're root or core admin
+    # Ensure we're root or Club_Admin
     if [[ "$EUID" -ne 0 && "$(whoami)" != "$Club_Admin" ]]; then
         echo "Please run this as root or the Club Admin ($Club_Admin)"
         return 1
@@ -567,15 +567,12 @@ checkstat() {
     echo "📊 Checking submission statistics..."
     [[ -n "$FILTER_DOMAIN" ]] && echo "🔍 Filtering by domain: $FILTER_DOMAIN"
 
-    # Get mentee list
     mentee_file="$DIR_CONF/$MENTEE"
-    total_mentees=0
-    declare -A submitted
-    declare -A total
-
-    # Keep track of new submissions
     last_seen_file="$DIR_CONF/.last_checkstat"
     touch "$last_seen_file"
+
+    total_mentees=0
+    declare -A submitted
 
     echo -e "\n📝 New Submissions Since Last Check:"
     echo "-------------------------------------"
@@ -585,38 +582,41 @@ checkstat() {
 
         mentee_home="/home/$user"
         task_done_file="$mentee_home/$TASK_D"
+
         [[ ! -f "$task_done_file" ]] && continue
 
         ((total_mentees++))
 
         while IFS=' ' read -r task_id task_domain; do
-            [[ -z "$task_id" || -z "$task_domain" ]] && continue
+            [[ -z "$task_id" || "$task_id" =~ ^# ]] && continue
+            [[ -z "$task_domain" ]] && continue
 
-            # Apply filter
             [[ -n "$FILTER_DOMAIN" && "$task_domain" != "$FILTER_DOMAIN" ]] && continue
 
             ((submitted["$task_id"]++))
-            ((total["$task_id"]++))
 
-            # Show only new submissions since last check
             entry="$user $task_id $task_domain"
             if ! grep -qxF "$entry" "$last_seen_file"; then
                 echo "$entry"
                 echo "$entry" >> "$last_seen_file"
             fi
 
-        done < "$task_done_file"
+        done < <(grep -v '^\s*#' "$task_done_file" | grep -v '^\s*$')  # filter comments and blanks
 
-    done < "$mentee_file"
+    done < <(grep -v '^\s*#' "$mentee_file" | grep -v '^\s*$')  # same for mentee list
 
     echo -e "\n📈 Submission Summary:"
     echo "------------------------"
 
-    for task_id in "${!submitted[@]}"; do
-        count=${submitted["$task_id"]}
-        percent=$((count * 100 / total_mentees))
-        printf "🗂️  Task: %-6s → Submitted: %2d/%2d (%d%%)\n" "$task_id" "$count" "$total_mentees" "$percent"
-    done
+    if [[ "${#submitted[@]}" -eq 0 ]]; then
+        echo "No submissions yet."
+    else
+        for task_id in "${!submitted[@]}"; do
+            count=${submitted["$task_id"]}
+            percent=$((count * 100 / total_mentees))
+            printf "🗂️  Task: %-6s → Submitted: %2d/%2d (%d%%)\n" "$task_id" "$count" "$total_mentees" "$percent"
+        done
+    fi
 
     echo -e "\n✅ Done."
 }
