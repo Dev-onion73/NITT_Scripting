@@ -345,6 +345,7 @@ domainpref() {
 	
 }
 
+#MENTOR ALLOCATION
 
 mentorAlloc() {
 
@@ -421,11 +422,13 @@ mentorAlloc() {
 
 
                     allocated=true
-                    break 2  # Break out of both loops
+                    break
                 fi
             done
 
             echo "No available mentors in $pref"
+            [ -d "directory_name" ] && rmdir "directory_name"
+
         done
 
         if [[ "$allocated" != true ]]; then
@@ -438,7 +441,8 @@ mentorAlloc() {
     # echo "Check ~/MENTOR_NAME/allocatedMentees.txt files for final allocation results."
 }
 
-    	
+#SUBMITTED TASKS
+
 submitTask() {
     user="$1"
     [[ -z "$user" ]] && user=$(whoami)
@@ -531,4 +535,10 @@ submitTask() {
     else
         echo "[INFO] $user is in neither Mentors nor Mentees group"
     fi
+}
+
+#STATUS
+
+checkstat() {
+    
 }
