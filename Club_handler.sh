@@ -41,6 +41,7 @@ export TASK_S="task_sub.txt"
 export ALLOC="allocated_mentees.txt"
 export SUB_TASK="submitted_tasks"
 export CAP="mentee_cap.txt"
+export MENT_ALLOC="Allocated_Mentees"
     
     read -r -p "Do you want to create Mentor's and Mentee's directories(y|n) ?" choice
     if [[ "$choice" == [yY] ]] ; then
@@ -219,6 +220,7 @@ echo "Mentor Creations"
 			echo "$user:$pass" | chpasswd
 			
 			mkdir -p "$H_MENT/$SUB_TASK"
+            mkdir -p "$H_MENT/$MENT_ALLOC"
 
 			ln -s "/home/$user" "$DIR_MENTOR/$dom/$user"
 
@@ -256,6 +258,7 @@ export CAP="$CAP"
 export DIR_MENTEE="$DIR_MENTEE"
 export DIR_MENTOR="$DIR_MENTOR"
 export DIR_CONF="$DIR_CONF"
+export MENT_ALLOC="$MENT_ALLOC"
 EOF
 
 BASHRC=""
@@ -417,8 +420,9 @@ mentorAlloc() {
                     mentor_home="/home/$mentor"
                     # mkdir -p "/home/$mentee/$pref/tasks"
                     echo "$mentee" >> "$mentor_home/$ALLOC"
-                    chgrp -R $mentor /home/$mentee
-                    chmod 770 /home/$mentee
+                    chgrp -R "$mentor" "/home/$mentee"
+                    chmod 770 "/home/$mentee"
+                    ln -s "/home/$mentee" "$mentor_home/$MENT_ALLOC"
 
 
                     allocated=true
@@ -540,5 +544,79 @@ submitTask() {
 #STATUS
 
 checkstat() {
-    
+    # Ensure we're root or core admin
+    if [[ "$EUID" -ne 0 && "$(whoami)" != "$Club_Admin" ]]; then
+        echo "Please run this as root or the Club Admin ($Club_Admin)"
+        return 1
+    fi
+
+    # Optional domain filter
+    FILTER_DOMAIN=""
+    if [[ $# -gt 0 ]]; then
+        case "$1" in
+            WEBDEV|APPDEV|SYSAD)
+                FILTER_DOMAIN="$1"
+                ;;
+            *)
+                echo "Invalid domain filter. Use: WEBDEV, APPDEV, SYSAD"
+                return 1
+                ;;
+        esac
+    fi
+
+    echo "📊 Checking submission statistics..."
+    [[ -n "$FILTER_DOMAIN" ]] && echo "🔍 Filtering by domain: $FILTER_DOMAIN"
+
+    # Get mentee list
+    mentee_file="$DIR_CONF/$MENTEE"
+    total_mentees=0
+    declare -A submitted
+    declare -A total
+
+    # Keep track of new submissions
+    last_seen_file="$DIR_CONF/.last_checkstat"
+    touch "$last_seen_file"
+
+    echo -e "\n📝 New Submissions Since Last Check:"
+    echo "-------------------------------------"
+
+    while IFS=' ' read -r user pass; do
+        [[ -z "$user" || "$user" =~ ^# ]] && continue
+
+        mentee_home="/home/$user"
+        task_done_file="$mentee_home/$TASK_D"
+        [[ ! -f "$task_done_file" ]] && continue
+
+        ((total_mentees++))
+
+        while IFS=' ' read -r task_id task_domain; do
+            [[ -z "$task_id" || -z "$task_domain" ]] && continue
+
+            # Apply filter
+            [[ -n "$FILTER_DOMAIN" && "$task_domain" != "$FILTER_DOMAIN" ]] && continue
+
+            ((submitted["$task_id"]++))
+            ((total["$task_id"]++))
+
+            # Show only new submissions since last check
+            entry="$user $task_id $task_domain"
+            if ! grep -qxF "$entry" "$last_seen_file"; then
+                echo "$entry"
+                echo "$entry" >> "$last_seen_file"
+            fi
+
+        done < "$task_done_file"
+
+    done < "$mentee_file"
+
+    echo -e "\n📈 Submission Summary:"
+    echo "------------------------"
+
+    for task_id in "${!submitted[@]}"; do
+        count=${submitted["$task_id"]}
+        percent=$((count * 100 / total_mentees))
+        printf "🗂️  Task: %-6s → Submitted: %2d/%2d (%d%%)\n" "$task_id" "$count" "$total_mentees" "$percent"
+    done
+
+    echo -e "\n✅ Done."
 }
