@@ -228,6 +228,7 @@ EOF
 
 echo "$user $dom $cap" >> "$DIR_CONF/$CAP"
 
+chown -R "$user" "$H_MENT"
 
 		fi
 	done < "$DIR_CONF/$MENTOR"
