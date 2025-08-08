@@ -416,7 +416,7 @@ mentorAlloc() {
                     mentor_home="/home/$mentor"
                     # mkdir -p "/home/$mentee/$pref/tasks"
                     echo "$mentee" >> "$mentor_home/$ALLOC"
-                    chgrp Mentors /home/$mentee
+                    chgrp -R $mentor /home/$mentee
                     chmod 770 /home/$mentee
 
 
@@ -520,8 +520,8 @@ submitTask() {
 
                 # Check for completion (non-empty task folder)
                 if [ "$(ls -A "$task_id_dir")" ]; then
-                    echo "$mentee $task_id $mentor_domain" >> "$HOME/$TASK_D"
-                    echo "[DONE] Task completed: $mentee → $task_id in $mentor_domain"
+                    echo "$task_id $mentor_domain" >> "/home/$mentee/$TASK_D"
+                    echo "[DONE] Task completed: $mentee → $task_id in $mentor_domain and written in /home/$mentee/$TASK_D"
                 else
                     echo "[TODO] Task pending: $mentee → $task_id in $mentor_domain"
                 fi
