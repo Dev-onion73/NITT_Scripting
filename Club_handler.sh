@@ -807,3 +807,38 @@ deregister() {
     echo "🎉 Deregistration from $sel_domain complete."
 }
 
+cronjob() {
+  local job="0 2 * * * /usr/local/bin/daily_cleanup.sh"
+
+  if [ $# -eq 0 ]; then
+    echo "Error: No argument provided."
+    echo "Usage: cronjob {enable|disable|status}"
+    return 1
+  fi
+
+  case "$1" in
+    enable)
+      (crontab -l 2>/dev/null | grep -v -F "$job"; echo "$job") | crontab -
+      echo "Cronjob enabled."
+      ;;
+    disable)
+      crontab -l 2>/dev/null | grep -v -F "$job" | crontab -
+      echo "Cronjob disabled."
+      ;;
+    status)
+      if crontab -l 2>/dev/null | grep -q -F "$job"; then
+        echo "Cronjob is ENABLED."
+      else
+        echo "Cronjob is DISABLED."
+      fi
+      ;;
+    *)
+      echo "Error: Invalid argument '$1'."
+      echo "Usage: cronjob {enable|disable|status}"
+      return 1
+      ;;
+  esac
+}
+
+
+

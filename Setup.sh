@@ -5,6 +5,9 @@ set -e
 SCRIPT="Club_handler.sh"
 DEST="/etc/profile.d"
 
+CLEANER="Cleaner.sh"
+C_DEST="/usr/local/bin/Club_cleaner.sh"
+
 WRAP="wrapper"
 W_DEST="/usr/local/bin/club"
 
@@ -15,7 +18,10 @@ if [[ "$EUID" -ne 0 ]]; then
 fi
 
 
-
+if [[ ! -f "$CLEANER" ]]; then
+  echo "Source file '$CLEANER' not found."
+  exit 1
+fi
 
 
 
@@ -68,6 +74,10 @@ else
 	fi 
 fi
 
+echo "Copying $CLEANER to $C_DEST"
+cp "$CLEANER" "$C_DEST"
+
+chmod +x "$C_DEST"
 
 echo "Copying $SCRIPT to $DEST"
 cp "$SCRIPT" "$DEST/$SCRIPT"

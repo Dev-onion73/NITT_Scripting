@@ -29,6 +29,9 @@ case "$cmd" in
     checkstat)
         checkstat "$@"
         ;;
+    cronjob)
+        cronjob "$@"
+        ;;
     *)
         echo "Unknown command: $cmd"
         echo "type <club help> for to check available commands"
