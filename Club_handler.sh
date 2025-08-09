@@ -541,6 +541,71 @@ submitTask() {
     fi
 }
 
+#TASK ALLOC
+
+taskalloc() {
+    user="$1"
+    [[ -z "$user" ]] && user=$(whoami)
+
+    # Ensure this is a mentor
+    if ! id -nG "$user" | grep -qw "Mentors"; then
+        echo "[ERROR] Only mentors can allocate tasks."
+        return 1
+    fi
+
+    # Detect mentor's domain group (Webdev, Appdev, Sysad)
+    mentor_domain=""
+    for domain in Webdev Appdev Sysad; do
+        if id -nG "$user" | grep -qw "$domain"; then
+            mentor_domain="$domain"
+            break
+        fi
+    done
+
+    if [[ -z "$mentor_domain" ]]; then
+        echo "[ERROR] $user is not in a valid domain group."
+        return 1
+    fi
+
+    mentor_domain=${mentor_domain^^}  # Convert to UPPERCASE (for consistency)
+
+    # Prompt for task details
+    read -r -p "Enter Task ID (e.g., TSK01): " task_id
+    [[ -z "$task_id" ]] && { echo "[ERROR] Task ID cannot be empty."; return 1; }
+
+    read -r -p "Enter Task Name (e.g., HTML Basics): " task_name
+    [[ -z "$task_name" ]] && { echo "[ERROR] Task name cannot be empty."; return 1; }
+
+    echo "[INFO] Allocating task '$task_name' ($task_id) for domain: $mentor_domain..."
+
+    mentee_list_file="/home/$user/$ALLOC"
+    [[ ! -f "$mentee_list_file" ]] && {
+        echo "[ERROR] Mentee allocation file not found: $mentee_list_file"
+        return 1
+    }
+
+    while IFS= read -r mentee; do
+        [[ -z "$mentee" || "$mentee" =~ ^# ]] && continue
+
+        mentee_home="/home/$mentee"
+        mentee_task_dir="$mentee_home/$mentor_domain/$task_id"
+
+        mkdir -p "$mentee_task_dir"
+        touch "$mentee_task_dir/$task_name.task"
+
+        echo "[OK] Created task folder for $mentee → $mentee_task_dir"
+
+        # Grant full access to mentor
+        setfacl -Rm u:$user:rwx "$mentee_home"
+        setfacl -Rm u:$user:rwx "$mentee_home/$mentor_domain"
+        setfacl -Rm u:$user:rwx "$mentee_task_dir"
+
+    done < "$mentee_list_file"
+
+    echo "[SUCCESS] Task '$task_id' allocated to all assigned mentees in $mentor_domain."
+}
+
+
 #STATUS
 
 checkstat() {
