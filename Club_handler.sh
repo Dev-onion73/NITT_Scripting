@@ -731,3 +731,79 @@ checkstat() {
 
     echo -e "\n✅ Done."
 }
+
+deregister() {
+    local user
+    user=$(whoami)
+
+    if ! id -nG "$user" | grep -qw "Mentees"; then
+        echo "❌ You must be a mentee to use this command."
+        return 1
+    fi
+
+    local dom_file="$DIR_CONF/$DOM"
+    local dom_pref_file="$HOME/$DOM_PREF"
+
+    if [[ ! -f "$dom_file" ]]; then
+        echo "❌ Preference file not found: $dom_file"
+        return 1
+    fi
+
+    echo "🔍 Your current domain preferences:"
+    grep -w "^$user" "$dom_file" || {
+        echo "⚠️  No domain preferences found for user $user."
+        return 1
+    }
+
+    echo "Which domain would you like to deregister from?"
+    echo "1) WEBDEV"
+    echo "2) APPDEV"
+    echo "3) SYSAD"
+    read -rp "Enter your choice (1-3): " choice
+
+    case "$choice" in
+        1) sel_domain="WEBDEV" ;;
+        2) sel_domain="APPDEV" ;;
+        3) sel_domain="SYSAD" ;;
+        *) echo "❌ Invalid selection."; return 1 ;;
+    esac
+
+    # Remove the domain folder from user's home
+    if [[ -d "$HOME/$sel_domain" ]]; then
+        rm -rf "$HOME/$sel_domain"
+        echo "🗑️  Deleted: $HOME/$sel_domain"
+    else
+        echo "ℹ️  No $sel_domain folder found in your home."
+    fi
+
+    # Remove domain from central mentees_domain.txt
+    tmp_file="$(mktemp)"
+    while IFS= read -r line; do
+        [[ "$line" =~ ^# || -z "$line" ]] && echo "$line" >> "$tmp_file" && continue
+        if [[ "$line" =~ ^$user ]]; then
+            read -r u d1 d2 d3 <<< "$line"
+            new_line="$user"
+            for d in "$d1" "$d2" "$d3"; do
+                [[ "$d" != "$sel_domain" ]] && new_line+=" $d"
+            done
+            # Fill with NULLs if fewer than 3 domains remain
+            for _ in $(seq $(awk '{print NF}' <<< "$new_line") 4); do
+                new_line+=" NULL"
+            done
+            echo "$new_line" >> "$tmp_file"
+        else
+            echo "$line" >> "$tmp_file"
+        fi
+    done < "$dom_file"
+    mv "$tmp_file" "$dom_file"
+    echo "✅ Updated $dom_file"
+
+    # Also update local $DOM_PREF file if it exists
+    if [[ -f "$dom_pref_file" ]]; then
+        grep -v "$sel_domain" "$dom_pref_file" > "${dom_pref_file}.tmp" && mv "${dom_pref_file}.tmp" "$dom_pref_file"
+        echo "✅ Updated $DOM_PREF"
+    fi
+
+    echo "🎉 Deregistration from $sel_domain complete."
+}
+
