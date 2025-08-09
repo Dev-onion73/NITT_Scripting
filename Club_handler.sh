@@ -141,6 +141,7 @@ echo "Mentees Creations"
 			H_MENT="/home/$user"
 			useradd -m -G Mentees -s "$shell" "$user"
 			echo "$user:$pass" | chpasswd
+            mentor_permissions Mentors $user
 			   
 			ln -s "/home/$user" "$DIR_MENTEE/$user"
 
@@ -420,8 +421,8 @@ mentorAlloc() {
                     mentor_home="/home/$mentor"
                     # mkdir -p "/home/$mentee/$pref/tasks"
                     echo "$mentee" >> "$mentor_home/$ALLOC"
-                    chgrp -R "$mentor" "/home/$mentee"
-                    chmod 770 "/home/$mentee"
+                    mentor_access $mentee
+
                     ln -s "/home/$mentee" "$mentor_home/$MENT_ALLOC"
 
 
@@ -541,6 +542,26 @@ submitTask() {
     fi
 }
 
+#PERMISSIONS
+
+mentor_access() {
+    local mentee_user="$1"
+    local mentee_home="/home/$mentee_user"
+
+    if [[ ! -d "$mentee_home" ]]; then
+        echo "[WARN] Skipping $mentee_user: Home directory not found"
+        return 1
+    fi
+
+    echo "🔧 Granting 'Mentors' group access to $mentee_user"
+
+    # Apply ACLs: allow all members of Mentors group full access
+    setfacl -R -m g:Mentors:rwx "$mentee_home"
+    setfacl -R -d -m g:Mentors:rwx "$mentee_home"
+
+    echo "✅ Permissions granted on $mentee_home"
+}
+
 #TASK ALLOC
 
 taskalloc() {
@@ -591,14 +612,18 @@ taskalloc() {
         mentee_task_dir="$mentee_home/$mentor_domain/$task_id"
 
         mkdir -p "$mentee_task_dir"
-        touch "$mentee_task_dir/$task_name.task"
+        # touch "$mentee_task_dir/$task_name.task"
 
         echo "[OK] Created task folder for $mentee → $mentee_task_dir"
 
-        # Grant full access to mentor
-        setfacl -Rm u:$user:rwx "$mentee_home"
-        setfacl -Rm u:$user:rwx "$mentee_home/$mentor_domain"
-        setfacl -Rm u:$user:rwx "$mentee_task_dir"
+        # # Grant full access to mentor
+        # setfacl -Rm u:$user:rwx "$mentee_home"
+        # setfacl -Rm u:$user:rwx "$mentee_home/$mentor_domain"
+        # setfacl -Rm u:$user:rwx "$mentee_task_dir"
+        # Allow the mentee full access to their task directory
+        setfacl -m u:$mentee:rwx "$mentee_task_dir"
+        setfacl -d -m u:$mentee:rwx "$mentee_task_dir"
+
 
     done < "$mentee_list_file"
 
@@ -615,15 +640,15 @@ checkstat() {
         return 1
     fi
 
-    # Optional domain filter
+    # Handle optional domain filter (normalize to uppercase)
     FILTER_DOMAIN=""
     if [[ $# -gt 0 ]]; then
-        case "$1" in
+        case "${1^^}" in
             WEBDEV|APPDEV|SYSAD)
-                FILTER_DOMAIN="$1"
+                FILTER_DOMAIN="${1^^}"
                 ;;
             *)
-                echo "Invalid domain filter. Use: WEBDEV, APPDEV, SYSAD"
+                echo "❌ Invalid domain filter. Use: WEBDEV, APPDEV, SYSAD"
                 return 1
                 ;;
         esac
@@ -636,8 +661,8 @@ checkstat() {
     last_seen_file="$DIR_CONF/.last_checkstat"
     touch "$last_seen_file"
 
-    total_mentees=0
-    declare -A submitted
+    declare -A assigned_count
+    declare -A submitted_count
 
     echo -e "\n📝 New Submissions Since Last Check:"
     echo "-------------------------------------"
@@ -646,40 +671,61 @@ checkstat() {
         [[ -z "$user" || "$user" =~ ^# ]] && continue
 
         mentee_home="/home/$user"
-        task_done_file="$mentee_home/$TASK_D"
+        [[ ! -d "$mentee_home" ]] && continue
 
-        [[ ! -f "$task_done_file" ]] && continue
+        # Scan for task folders across all domain directories
+        for domain_dir in "$mentee_home"/WEBDEV "$mentee_home"/APPDEV "$mentee_home"/SYSAD; do
+            [[ ! -d "$domain_dir" ]] && continue
 
-        ((total_mentees++))
+            for task_path in "$domain_dir"/*/; do
+                [[ ! -d "$task_path" ]] && continue
+                task_id="$(basename "$task_path")"
 
-        while IFS=' ' read -r task_id task_domain; do
-            [[ -z "$task_id" || "$task_id" =~ ^# ]] && continue
-            [[ -z "$task_domain" ]] && continue
+                # Infer domain from task_id prefix
+                prefix="${task_id:0:2}"
+                case "$prefix" in
+                    WB) task_domain="WEBDEV" ;;
+                    AP) task_domain="APPDEV" ;;
+                    SY) task_domain="SYSAD" ;;
+                    *)  task_domain="UNKNOWN" ;;
+                esac
 
-            [[ -n "$FILTER_DOMAIN" && "$task_domain" != "$FILTER_DOMAIN" ]] && continue
+                # Skip if filtering by domain and it doesn't match
+                if [[ -n "$FILTER_DOMAIN" && "$task_domain" != "$FILTER_DOMAIN" ]]; then
+                    continue
+                fi
 
-            ((submitted["$task_id"]++))
+                key="$task_id|$task_domain"
+                ((assigned_count["$key"]++))
 
-            entry="$user $task_id $task_domain"
-            if ! grep -qxF "$entry" "$last_seen_file"; then
-                echo "$entry"
-                echo "$entry" >> "$last_seen_file"
-            fi
-
-        done < <(grep -v '^\s*#' "$task_done_file" | grep -v '^\s*$')  # filter comments and blanks
-
-    done < <(grep -v '^\s*#' "$mentee_file" | grep -v '^\s*$')  # same for mentee list
+                # Consider submission only if task directory is non-empty
+                if [ "$(ls -A "$task_path")" ]; then
+                    ((submitted_count["$key"]++))
+                    
+                    entry="$user $task_id $task_domain"
+                    if ! grep -qxF "$entry" "$last_seen_file"; then
+                        echo "$entry"
+                        echo "$entry" >> "$last_seen_file"
+                    fi
+                fi
+            done
+        done
+    done < <(grep -v '^\s*#' "$mentee_file" | grep -v '^\s*$')
 
     echo -e "\n📈 Submission Summary:"
     echo "------------------------"
 
-    if [[ "${#submitted[@]}" -eq 0 ]]; then
-        echo "No submissions yet."
+    if [[ "${#assigned_count[@]}" -eq 0 ]]; then
+        echo "No tasks assigned yet."
     else
-        for task_id in "${!submitted[@]}"; do
-            count=${submitted["$task_id"]}
-            percent=$((count * 100 / total_mentees))
-            printf "🗂️  Task: %-6s → Submitted: %2d/%2d (%d%%)\n" "$task_id" "$count" "$total_mentees" "$percent"
+        for key in $(printf "%s\n" "${!assigned_count[@]}" | sort); do
+            task_id="${key%%|*}"
+            domain="${key##*|}"
+            total=${assigned_count["$key"]}
+            submitted=${submitted_count["$key"]:-0}
+            percent=$((submitted * 100 / total))
+            printf "🗂️  Task ID: %-6s | Domain: %-6s → Submitted: %2d/%2d (%d%%)\n" \
+                "$task_id" "$domain" "$submitted" "$total" "$percent"
         done
     fi
 

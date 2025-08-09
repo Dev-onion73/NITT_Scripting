@@ -27,7 +27,7 @@ case "$cmd" in
         mentorAlloc
         ;;
     checkstat)
-        checkstat
+        checkstat "$@"
         ;;
     *)
         echo "Unknown command: $cmd"
