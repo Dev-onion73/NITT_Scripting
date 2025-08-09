@@ -842,3 +842,165 @@ cronjob() {
 
 
 
+
+setup_autostart_notification() {
+    local mentee="$1"
+    local quiz_file="/home/$mentee/quiz/questions.txt"
+    local autostart_dir="/home/$mentee/.config/autostart"
+    local desktop_file="$autostart_dir/quiz_notify.desktop"
+    local notify_script="/home/$mentee/.local/bin/show_quiz_notification.sh"
+
+    # Check if quiz file exists
+    [[ ! -f "$quiz_file" ]] && echo "❌ No quiz assigned to $mentee." && return 1
+
+    # Detect Desktop Environment
+    local de="${XDG_CURRENT_DESKTOP:-$DESKTOP_SESSION}"
+    de=$(echo "$de" | tr '[:upper:]' '[:lower:]')
+
+    if [[ -z "$de" ]]; then
+        echo "❌ Unable to detect desktop environment for $mentee."
+        return 1
+    fi
+
+    # Supported DEs
+    case "$de" in
+        *gnome*|*kde*|*xfce*|*cinnamon*|*mate*)
+            ;;
+        *)
+            echo "❌ Unsupported or unknown desktop environment: $de"
+            return 1
+            ;;
+    esac
+
+    # Create notification script
+    mkdir -p "$(dirname "$notify_script")"
+    cat > "$notify_script" <<EOF
+#!/bin/bash
+if [[ -f "$quiz_file" ]]; then
+    notify-send "📚 New Quiz Assigned" "You have a new quiz. Check your ~/quiz/questions.txt"
+fi
+EOF
+
+    chmod +x "$notify_script"
+    chown "$mentee":"$mentee" "$notify_script"
+
+    # Create autostart .desktop file
+    mkdir -p "$autostart_dir"
+    cat > "$desktop_file" <<EOF
+[Desktop Entry]
+Type=Application
+Exec=$notify_script
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Quiz Notification
+Comment=Notify user about new quiz
+EOF
+
+    chown -R "$mentee":"$mentee" "$autostart_dir"
+    echo "✅ Notification autostart set up for $mentee"
+}
+
+
+
+
+
+
+ssetQuiz() {
+    local alloc_file="$HOME/$ALLOC"
+    if [[ ! -f "$alloc_file" ]]; then
+        echo "❌ Allocated mentees file not found: $alloc_file"
+        return 1
+    fi
+
+    mapfile -t mentees < <(grep -v '^\s*$' "$alloc_file")
+    if [[ ${#mentees[@]} -eq 0 ]]; then
+        echo "⚠️ No mentees allocated."
+        return 1
+    fi
+
+    echo "📝 Enter your quiz questions. Press ENTER on empty line to finish."
+    local questions=()
+    while true; do
+        read -rp "Question $(( ${#questions[@]} + 1 )): " q
+        [[ -z "$q" ]] && break
+        questions+=("$q")
+    done
+
+    if [[ ${#questions[@]} -eq 0 ]]; then
+        echo "❌ No questions entered."
+        return 1
+    fi
+
+    for mentee in "${mentees[@]}"; do
+        local quiz_dir="/home/$mentee/quiz"
+        local quiz_file="$quiz_dir/questions.txt"
+
+        if [[ ! -d "$quiz_dir" ]]; then
+            echo "⚠️ Quiz directory missing for $mentee. Skipping."
+            continue
+        fi
+
+        printf "%s\n" "${questions[@]}" > "$quiz_file"
+        for mentee in "${mentees[@]}"; do
+    local quiz_dir="/home/$mentee/quiz"
+    local quiz_file="$quiz_dir/questions.txt"
+
+    if [[ ! -d "$quiz_dir" ]]; then
+        echo "⚠️ Quiz directory missing for $mentee. Skipping."
+        continue
+    fi
+
+    printf "%s\n" "${questions[@]}" > "$quiz_file"
+
+    # Give mentee read permission explicitly
+    setfacl -m u:$mentee:r-- "$quiz_file"
+    chmod 640 "$quiz_file"
+
+    echo "✅ Quiz set for $mentee"
+done
+
+        echo "✅ Quiz set for $mentee"
+    done
+}
+
+answerQuiz() {
+    local mentee="$USER"
+    local quiz_dir="/home/$mentee/quiz"
+    local quiz_file="$quiz_dir/questions.txt"
+    local answers_file="$quiz_dir/answers.txt"
+
+    if [[ ! -f "$quiz_file" ]]; then
+        echo "ℹ️ No quiz assigned to you yet."
+        return 0
+    fi
+
+    echo "📝 You have a quiz assigned. Please answer the following questions:"
+
+    mapfile -t questions < "$quiz_file"
+    if [[ ${#questions[@]} -eq 0 ]]; then
+        echo "⚠️ Quiz file empty."
+        return 1
+    fi
+
+    # Clear previous answers if any
+    > "$answers_file"
+
+    for i in "${!questions[@]}"; do
+        echo ""
+        echo "Q$((i+1)): ${questions[$i]}"
+        read -rp "Your answer: " ans
+        echo "Q$((i+1)): $ans" >> "$answers_file"
+    done
+
+    if ! chown "$mentee:$mentee" "$answers_file"; then
+        echo "❌ Could not change ownership of $answers_file."
+        return 1
+    fi
+    chmod 600 "$answers_file"
+
+    echo ""
+    echo "✅ Your answers have been saved to $answers_file"
+}
+
+
