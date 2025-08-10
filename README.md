@@ -172,6 +172,6 @@ Ensure permissions and ownerships are properly managed, especially for quiz, tas
 
 Environment variables are globally loaded via /etc/profile.d/club_env.sh.
 
-> *This is my first structured project to utilise git effectively with tracking numbers and stuff :)*\n
+> *This is my first structured project to utilise git effectively with tracking numbers and stuff :)*
 > \- Dev-Onion
 
