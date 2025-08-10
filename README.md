@@ -1,6 +1,6 @@
 
 
-# WardenSh – Club Administration Shell Tool
+# WardenSh – Club Administration Tool
 
 WardenSh is a simple club management system written in shell allowing streamlined handling of Members (Mentees), Mentors, domains, task assignments, quizzes, and access control—all via easy-to-use command-line functions.
 
